@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project >
+
+    <scriptdef name="s3-publish" language="javascript">
+        <attribute name="basedir"/>
+        <attribute name="s3.root"/>
+        <attribute name="release.file" /> <![CDATA[
+        var properties = self.getProject().createTask("property");
+        properties.setFile(new java.io.File(attributes.get("release.file")));
+        properties.perform();
+        var files = self.getProject().getProperty("release.files").split(",");
+
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+
+            var cp = self.getProject().createTask("aws-s3-cp");
+            cp.setDynamicAttribute("basedir",attributes.get("basedir"));
+            cp.setDynamicAttribute("s3.root",attributes.get("s3.root"));
+            cp.setDynamicAttribute("file",file);
+            cp.perform();
+        }
+    ]]> </scriptdef>
+
+    <macrodef name="aws-s3-cp">
+        <attribute name="basedir"/>
+        <attribute name="file"/>
+        <attribute name="s3.root"/>
+        <sequential>
+            <exec executable="aws">
+                <arg value="s3"/>
+                <arg value="cp"/>
+                <arg path="@{basedir}/@{file}"/>
+                <arg value="@{s3.root}/@{file}"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+</project>
